@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"math"
 
+	gosseract "github.com/otiai10/gosseract"
 	"gocv.io/x/gocv"
 )
 
@@ -15,7 +16,19 @@ func main() {
 	//open cv- detect edges
 	//ocr - get bonding boxes
 	// map edges to row/columns and letters
-	detectEdges("test1.jpg")
+	//detectEdges("test1.jpg")
+	ocr("test2.jpg")
+}
+
+func ocr(filename string) {
+	client := gosseract.NewClient()
+	defer client.Close()
+	client.SetImage(filename)
+
+	bb, err := client.GetBoundingBoxes(gosseract.RIL_SYMBOL)
+	fmt.Println("-> err:", err)
+
+	fmt.Println(bb)
 }
 
 func detectEdges(filename string) {
