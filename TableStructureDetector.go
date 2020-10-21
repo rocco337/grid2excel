@@ -32,17 +32,41 @@ func (t *TableStructureDetector) detectEdgesInternal(filename string) (TableStru
 	gocv.Canny(matGray, &matCanny, 100, 150)
 	gocv.HoughLinesPWithParams(matCanny, &matLines, 1, math.Pi/180, 200, 2, 4)
 
+	// remove detected line - paint them white  should work?
+	removeLine := func(line []int) {
+		pt1 := image.Pt(int(line[0]), int(line[1]))
+		pt2 := image.Pt(int(line[2]), int(line[3]))
+		white := color.RGBA{255, 255, 255, 255}
+		gocv.Line(&mat, pt1, pt2, white, 1)
+	}
+
 	rows := make([][]int, 0)
 	columns := make([][]int, 0)
 	for i := 0; i < matLines.Rows(); i++ {
 		line := matLines.GetVeciAt(i, 0)
 		lineAsIntArray := []int{int(line[0]), int(line[1]), int(line[2]), int(line[3])}
+
 		if line[1] > line[3] {
 			//vertical
 			columns = appendSortedBy(columns, lineAsIntArray, 0)
+
 		} else if line[0] < line[2] {
 			//horizontal
 			rows = appendSortedBy(rows, lineAsIntArray, 1)
+		}
+		removeLine(lineAsIntArray)
+
+	}
+
+	//remove duplicates
+	for rowIndex, row := range rows {
+		if rowIndex > 1 && row[1]-rows[rowIndex-1][1] < 5 {
+			copy(rows[rowIndex:], rows[rowIndex+1:])
+		}
+	}
+	for columnIndex, column := range columns {
+		if columnIndex > 1 && column[1]-columns[columnIndex-1][1] < 5 {
+			copy(columns[columnIndex:], columns[columnIndex+1:])
 		}
 	}
 
@@ -50,17 +74,15 @@ func (t *TableStructureDetector) detectEdgesInternal(filename string) (TableStru
 
 	for rowIndex, row := range rows {
 		result.Rows[rowIndex] = make([]Column, len(columns))
-
-		pt1 := image.Pt(int(row[0]), int(row[1]))
-		pt2 := image.Pt(int(row[2]), int(row[3]))
-		gocv.Line(&mat, pt1, pt2, color.RGBA{0, 255, 0, 50}, 2)
+		// pt1 := image.Pt(int(row[0]), int(row[1]))
+		// pt2 := image.Pt(int(row[2]), int(row[3]))
+		// gocv.Line(&mat, pt1, pt2, color.RGBA{0, 255, 0, 50}, 2)
 
 		//todo - detect row treshold remove line if cv detected to lines one on top of each other .for instance where distancebetween lines is 1 pixel
 		for columnIndex, column := range columns {
-
-			pt1 := image.Pt(int(column[0]), int(column[1]))
-			pt2 := image.Pt(int(column[2]), int(column[3]))
-			gocv.Line(&mat, pt1, pt2, color.RGBA{0, 255, 0, 50}, 2)
+			// pt1 := image.Pt(int(column[0]), int(column[1]))
+			// pt2 := image.Pt(int(column[2]), int(column[3]))
+			// gocv.Line(&mat, pt1, pt2, color.RGBA{0, 255, 0, 50}, 2)
 
 			x, y, err := t.intersection(columns[columnIndex], rows[rowIndex])
 			if err != nil {
