@@ -14,7 +14,18 @@ func main() {
 	// map edges to row/columns and letters
 
 	structDetector := TableStructureDetector{}
-	structDetector.Detect("test1.jpg")
+	strucutre, _, _ := structDetector.Detect("test1.jpg")
+
+	fmt.Println(strucutre)
+	// window := gocv.NewWindow("detected lines")
+	// for {
+	// 	window.ResizeWindow(15000, 20000)
+	// 	window.IMShow(matrix)
+
+	// 	if window.WaitKey(10) >= 0 {
+	// 		break
+	// 	}
+	// }
 	//ocr("test2.jpg")
 }
 
